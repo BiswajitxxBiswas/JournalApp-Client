@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../components/ui/dialog";
@@ -7,6 +8,7 @@ import { Badge } from "../components/ui/badge";
 import { Plus, Calendar, Heart, Book, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../components/ui/input";
+import { useToast } from "../hooks/use-toast";
 
 const moodEmojis = {
   happy: "😊",
@@ -29,44 +31,36 @@ export default function Dashboard() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const mockEntries = [
-      {
-        id: "1",
-        title: "A Beautiful Morning",
-        content: "Woke up to the sound of birds chirping and sunlight streaming through my window. There's something magical about early mornings that fills me with hope and energy for the day ahead. I'm grateful for these peaceful moments.",
-        date: "2024-01-15",
-        mood: "happy",
-        tags: ["morning", "gratitude", "nature"]
-      },
-      {
-        id: "2",
-        title: "Reflecting on Growth",
-        content: "Been thinking about how much I've grown this past year. The challenges seemed insurmountable at times, but looking back, each one taught me something valuable about resilience and self-discovery.",
-        date: "2024-01-14",
-        mood: "neutral",
-        tags: ["reflection", "growth", "life lessons"]
-      },
-      {
-        id: "3",
-        title: "Weekend Adventures",
-        content: "Explored a new hiking trail today with friends. The view from the summit was absolutely breathtaking! Feeling so energized and connected to nature. These are the moments that remind me what life is all about.",
-        date: "2024-01-13",
-        mood: "excited",
-        tags: ["adventure", "friends", "hiking", "nature"]
-      },
-      {
-        id: "4",
-        title: "Quiet Evening Thoughts",
-        content: "Sometimes the weight of everything feels overwhelming. Today was one of those days where nothing seemed to go right. But I'm learning that it's okay to have these moments. Tomorrow is a new day.",
-        date: "2024-01-12",
-        mood: "sad",
-        tags: ["emotional", "self-care", "tough day"]
+    const fetchEntries = async () => {
+      try {
+        const token = localStorage.getItem("userToken");
+        const res = await axios.get("http://localhost:8080/journal", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const normalizedEntries = res.data.map((entry) => ({
+          ...entry,
+          mood: entry.sentiments ? entry.sentiments.toLowerCase() : null,
+        }));
+
+        setEntries(normalizedEntries);
+      } catch (error) {
+        console.error("Failed to fetch entries", error);
+        toast({
+          title: "Error",
+          description: "Failed to load journal entries.",
+          variant: "destructive",
+        });
       }
-    ];
-    setEntries(mockEntries);
-  }, []);
+    };
+    fetchEntries();
+  }, [toast]);
 
   const filteredEntries = entries.filter((entry) =>
     entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

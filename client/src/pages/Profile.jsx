@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -76,6 +77,20 @@ export default function Profile() {
 
   // Populate mock profile data on component mount; replace with real API call if needed
   useEffect(() => {
+    // try{
+    //   const fetchProfile = async()=>{
+    //     try{
+    //       const token = localStorage.getItem("userToken");
+    //       const res = await axios.get("http://localhost:8080/journal",{
+    //         headers : {
+    //           "Content-Type" : "application/json",
+    //           Authorization: `Bearer ${token}`,
+    //         }
+    //       });
+
+    //     }
+    //   }
+    // }
     const mockProfile = {
       username: "JournalWriter",
       email: "user@example.com",
