@@ -16,7 +16,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import { useToast } from "../hooks/use-toast";
+import { toast } from "react-toastify";
 import {
   LineChart,
   Line,
@@ -60,7 +60,6 @@ export default function Profile() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { toast } = useToast();
 
   const [passwords, setPasswords] = useState({ new: "", confirm: "" });
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -233,10 +232,7 @@ export default function Profile() {
           },
         }
       );
-      toast({
-        title: "Profile updated successfully!",
-        description: "Your changes have been saved.",
-      });
+      toast.success("Profile updated successfully!");
       setPasswords({ new: "", confirm: "" });
     } catch (err) {
       if (err.response && err.response.data) {

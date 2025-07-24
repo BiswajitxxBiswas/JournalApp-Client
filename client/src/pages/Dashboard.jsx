@@ -8,7 +8,7 @@ import { Badge } from "../components/ui/badge";
 import { Plus, Calendar, Book, Search, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../components/ui/input";
-import { useToast } from "../hooks/use-toast";
+import { toast } from "react-toastify";
 
 const moodEmojis = {
   happy: "😊",
@@ -41,7 +41,6 @@ export default function Dashboard() {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchEntries = async () => {
@@ -59,15 +58,11 @@ export default function Dashboard() {
         }));
         setEntries(normalizedEntries);
       } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to load journal entries.",
-          variant: "destructive",
-        });
+        toast.error("Failed to load journal entries.");
       }
     };
     fetchEntries();
-  }, [toast]);
+  }, []);
 
   const filteredEntries = entries.filter((entry) =>
     entry.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -93,16 +88,9 @@ export default function Dashboard() {
       });
       setEntries(entries.filter(entry => entry.id !== entryId));
       setSelectedEntry(null);
-      toast({
-        title: "Entry deleted",
-        description: "Your journal entry has been successfully deleted.",
-      });
+      toast.success("Your journal entry has been successfully deleted.")
     } catch {
-      toast({
-        title: "Error",
-        description: "Failed to delete entry. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete entry. Please try again.");
     }
   };
 

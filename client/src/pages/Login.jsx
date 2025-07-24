@@ -13,7 +13,7 @@ import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { useToast } from "../hooks/use-toast";
+import { toast } from "react-toastify";
 
 export default function Login({ onLogin }) {
   const [formData, setFormData] = useState({
@@ -25,7 +25,6 @@ export default function Login({ onLogin }) {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleInputChange = (e) => {
     setFormData((prev) => ({
@@ -54,10 +53,7 @@ export default function Login({ onLogin }) {
       // Notify App to update auth state
       if (onLogin) onLogin();
 
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
+      toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (err) {
       if (err.response?.data?.message) {

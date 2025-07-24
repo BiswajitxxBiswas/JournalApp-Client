@@ -6,6 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { JournalNavbar } from "./components/JournalNavbar";
 
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -118,6 +121,7 @@ const App = () => {
   const handleLogin = () => {
     localStorage.setItem("isAuthenticated", "true");
     setIsAuthenticated(true);
+    toast.success("Login successful!");
   };
 
   const handleLogout = () => {
@@ -125,6 +129,7 @@ const App = () => {
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
     setIsAuthenticated(false);
+    toast.info("You have been logged out.");
   };
 
   return (
@@ -138,6 +143,18 @@ const App = () => {
             isAuthChecked={isAuthChecked}
             onLogin={handleLogin}
             onLogout={handleLogout}
+          />
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
           />
         </BrowserRouter>
       </TooltipProvider>

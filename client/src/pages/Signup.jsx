@@ -13,7 +13,7 @@ import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
-import { useToast } from "../hooks/use-toast";
+import { toast } from "react-toastify";
 
 export default function Signup({ onLogin }) {
   const [formData, setFormData] = useState({
@@ -28,7 +28,6 @@ export default function Signup({ onLogin }) {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const validateForm = () => {
     if (formData.password !== formData.confirmPassword) {
@@ -67,10 +66,7 @@ export default function Signup({ onLogin }) {
       // Notify App of login (update authenticated state)
       if (onLogin) onLogin();
 
-      toast({
-        title: "Account created successfully!",
-        description: "Welcome to JournalApp. Let's set up your profile.",
-      });
+      toast.success("Welcome to JournalApp. Let's set up your profile.");
 
       navigate("/profile");
     } catch (err) {

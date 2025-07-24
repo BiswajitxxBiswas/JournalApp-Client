@@ -9,7 +9,7 @@ import { Badge } from "../components/ui/badge";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, Save, Plus, X, Heart } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useToast } from "../hooks/use-toast";
+import { toast } from "react-toastify";
 
 const moodOptions = [
   { value: "HAPPY", label: "Happy", emoji: "😊" },
@@ -31,7 +31,7 @@ export default function CreateEntry() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
+
 
   // Check if this is an edit operation
   const editEntry = location.state?.editEntry;
@@ -110,10 +110,7 @@ export default function CreateEntry() {
             Authorization: `Bearer ${token}`
           }
         });
-        toast({
-          title: "Entry updated successfully!",
-          description: "Your journal entry has been updated."
-        });
+        toast.success("Entry saved successfully! ");
       } else {
         // Create new entry
         await axios.post("http://localhost:8080/journal", payload, {
@@ -122,10 +119,7 @@ export default function CreateEntry() {
             Authorization: `Bearer ${token}`
           }
         });
-        toast({
-          title: "Entry saved successfully!",
-          description: "Your journal entry has been created."
-        });
+        toast.success("Entry updated successfully! ");
       }
       navigate("/dashboard");
     } catch (err) {
