@@ -17,6 +17,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import api from "../utils/auth"
 import {
   LineChart,
   Line,
@@ -158,12 +159,7 @@ export default function Profile() {
     async function fetchProfile() {
       try {
         const token = localStorage.getItem("userToken");
-        const res = await axios.get("http://localhost:8080/users", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await api.get("/users");
         const user = res.data;
         setProfile({
           username: user.userName || "",
@@ -222,16 +218,7 @@ export default function Profile() {
       if (profile.username) data.userName = profile.username;
       if (passwords.new) data.password = passwords.new;
 
-      await axios.put(
-        "http://localhost:8080/users/update-user",
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await api.put("/users/update-user",data);
       toast.success("Profile updated successfully!");
       setPasswords({ new: "", confirm: "" });
     } catch (err) {

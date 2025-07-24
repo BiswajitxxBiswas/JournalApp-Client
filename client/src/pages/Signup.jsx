@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import api from "../utils/auth"
 
 export default function Signup({ onLogin }) {
   const [formData, setFormData] = useState({
@@ -50,7 +51,7 @@ export default function Signup({ onLogin }) {
     setIsLoading(true);
 
     try {
-      const response = await axios.post("http://localhost:8080/public/signup", {
+      const response = await api.post("/public/signup", {
         userName: formData.userName,
         email: formData.email,
         password: formData.password,

@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, Save, Plus, X, Heart } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import api from "../utils/auth"
 
 const moodOptions = [
   { value: "HAPPY", label: "Happy", emoji: "😊" },
@@ -104,21 +105,11 @@ export default function CreateEntry() {
 
       if (isEditing) {
         // Update existing entry
-        await axios.put(`http://localhost:8080/journal/${editEntry.id}`, payload, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          }
-        });
+        await api.put(`journal/${editEntry.id}`, payload);
         toast.success("Entry saved successfully! ");
       } else {
         // Create new entry
-        await axios.post("http://localhost:8080/journal", payload, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          }
-        });
+        await api.post("http://localhost:8080/journal", payload);
         toast.success("Entry updated successfully! ");
       }
       navigate("/dashboard");

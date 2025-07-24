@@ -9,6 +9,7 @@ import { Plus, Calendar, Book, Search, Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../components/ui/input";
 import { toast } from "react-toastify";
+import api from "../utils/auth"
 
 const moodEmojis = {
   happy: "😊",
@@ -46,12 +47,7 @@ export default function Dashboard() {
     const fetchEntries = async () => {
       try {
         const token = localStorage.getItem("userToken");
-        const res = await axios.get("http://localhost:8080/journal", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await api.get("/journal");
         const normalizedEntries = res.data.map((entry) => ({
           ...entry,
           mood: entry.sentiments ? entry.sentiments.toLowerCase() : null,
@@ -83,9 +79,7 @@ export default function Dashboard() {
   const handleDeleteEntry = async (entryId) => {
     try {
       const token = localStorage.getItem("userToken");
-      await axios.delete(`http://localhost:8080/journal/${entryId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/journal/${entryId}`);
       setEntries(entries.filter(entry => entry.id !== entryId));
       setSelectedEntry(null);
       toast.success("Your journal entry has been successfully deleted.")

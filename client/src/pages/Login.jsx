@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import api from "../utils/auth"
 
 export default function Login({ onLogin }) {
   const [formData, setFormData] = useState({
@@ -39,7 +40,7 @@ export default function Login({ onLogin }) {
     setError("");
 
     try {
-      const response = await axios.post("http://localhost:8080/public/login", {
+      const response = await api.post("/public/login", {
         userName: formData.userName,
         password: formData.password,
       });
