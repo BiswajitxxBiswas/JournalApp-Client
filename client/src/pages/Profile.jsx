@@ -30,6 +30,16 @@ import {
   Cell,
 } from "recharts";
 
+const EMOTION_COLORS = {
+  HAPPY: "#31c48d",
+  EXCITED: "#5eead4",
+  NEUTRAL: "#cbd5e1",
+  ANXIOUS: "#f87171",
+  SAD: "#fbbf24",
+};
+
+const ALL_EMOTIONS = ["HAPPY", "EXCITED", "NEUTRAL", "ANXIOUS", "SAD"];
+
 export default function Profile() {
   const [profile, setProfile] = useState({
     username: "",
@@ -43,144 +53,21 @@ export default function Profile() {
   const [error, setError] = useState("");
   const { toast } = useToast();
 
-  // Password change state
+  // New Password state
   const [passwords, setPasswords] = useState({
-    current: "",
     new: "",
     confirm: "",
   });
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
-  const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // Sample emotional trend data for charts
-  const emotionalData = [
-    { date: "01/01", happy: 3, sad: 1, neutral: 2, excited: 1, anxious: 0 },
-    { date: "01/02", happy: 4, sad: 0, neutral: 1, excited: 2, anxious: 1 },
-    { date: "01/03", happy: 2, sad: 2, neutral: 3, excited: 0, anxious: 1 },
-    { date: "01/04", happy: 5, sad: 0, neutral: 1, excited: 1, anxious: 0 },
-    { date: "01/05", happy: 3, sad: 1, neutral: 2, excited: 2, anxious: 0 },
-    { date: "01/06", happy: 4, sad: 0, neutral: 2, excited: 1, anxious: 1 },
-    { date: "01/07", happy: 6, sad: 0, neutral: 1, excited: 0, anxious: 0 },
-  ];
+  const [journalEntries, setJournalEntries] = useState([]);
+  const [emotionalData, setEmotionalData] = useState([]);
+  const [pieData, setPieData] = useState([]);
 
-  // Pie chart data for emotional distribution
-  const pieData = [
-    { name: "Happy", value: 35, color: "#31c48d" },
-    { name: "Excited", value: 25, color: "#5eead4" },
-    { name: "Neutral", value: 20, color: "#cbd5e1" },
-    { name: "Anxious", value: 12, color: "#f87171" },
-    { name: "Sad", value: 8, color: "#fbbf24" },
-  ];
-
-  // Populate mock profile data on component mount; replace with real API call if needed
-  useEffect(() => {
-    // try{
-    //   const fetchProfile = async()=>{
-    //     try{
-    //       const token = localStorage.getItem("userToken");
-    //       const res = await axios.get("http://localhost:8080/journal",{
-    //         headers : {
-    //           "Content-Type" : "application/json",
-    //           Authorization: `Bearer ${token}`,
-    //         }
-    //       });
-
-    //     }
-    //   }
-    // }
-    const mockProfile = {
-      username: "JournalWriter",
-      email: "user@example.com",
-      joinDate: "2024-01-01",
-      emotionalStatus: "happy",
-      totalEntries: 12,
-      streakDays: 7,
-    };
-    setProfile(mockProfile);
-  }, []);
-
-  // Handle changes in profile input fields
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setProfile((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle password form input changes
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPasswords((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Validate password fields before submitting
-  const validatePasswords = () => {
-    if (!passwords.current || !passwords.new || !passwords.confirm) {
-      setPasswordError("All password fields are required.");
-      return false;
-    }
-    if (passwords.new.length < 6) {
-      setPasswordError("New password must be at least 6 characters.");
-      return false;
-    }
-    if (passwords.new !== passwords.confirm) {
-      setPasswordError("New passwords do not match.");
-      return false;
-    }
-    setPasswordError("");
-    return true;
-  };
-
-  // Submits password update (mocked here)
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    if (!validatePasswords()) return;
-
-    setPasswordLoading(true);
-    try {
-      // Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1200));
-      toast({
-        title: "Password updated!",
-        description: "Your password has been successfully changed.",
-      });
-      setPasswords({ current: "", new: "", confirm: "" });
-    } catch {
-      setPasswordError("Failed to update password. Please try again.");
-    } finally {
-      setPasswordLoading(false);
-    }
-  };
-
-  // Saves profile changes (mocked here)
-  const handleSave = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      // Replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast({
-        title: "Profile updated successfully!",
-        description: "Your changes have been saved.",
-      });
-    } catch {
-      setError("Failed to update profile. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Utility: calculate days since join date
-  const calculateDaysSince = (dateString) => {
-    const joinDate = new Date(dateString);
-    const today = new Date();
-    const diffTime = Math.abs(today - joinDate);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  // Utility: format join date nicely
   const formatJoinDate = (dateString) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       year: "numeric",
@@ -189,11 +76,187 @@ export default function Profile() {
     });
   };
 
+  const calculateDaysSince = (dateString) => {
+    if (!dateString) return "-";
+    const joinDate = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today - joinDate);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
+  function computeStreakDays(entries) {
+    if (!entries || entries.length === 0) return 0;
+    const uniqueDates = [...new Set(entries.map(e => e.date))].sort((a, b) => new Date(b) - new Date(a));
+    let streak = 1;
+    for (let i = 1; i < uniqueDates.length; ++i) {
+      const prev = new Date(uniqueDates[i - 1]);
+      const curr = new Date(uniqueDates[i]);
+      const diff = (prev - curr) / (1000 * 60 * 60 * 24);
+      if (diff === 1) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  function getLast7Days() {
+    const days = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0,10));
+    }
+    return days;
+  }
+
+  function createEmotionalTrend(entries) {
+    const last7Days = getLast7Days();
+    const chart = last7Days.map(d => ({
+      date: d.slice(5),
+      happy: 0,
+      sad: 0,
+      neutral: 0,
+      excited: 0,
+      anxious: 0
+    }));
+    entries.forEach(entry => {
+      const idx = last7Days.indexOf(entry.date);
+      let s = entry.sentiments ? entry.sentiments.toLowerCase() : "neutral";
+      if (idx >= 0 && chart[idx][s] !== undefined) {
+        chart[idx][s]++;
+      }
+    });
+    return chart;
+  }
+
+  function createPieData(entries) {
+    const counts = { HAPPY: 0, EXCITED: 0, NEUTRAL: 0, ANXIOUS: 0, SAD: 0 };
+    entries.forEach(e => {
+      const key = (e.sentiments || "NEUTRAL").toUpperCase();
+      if (counts.hasOwnProperty(key)) counts[key]++;
+    });
+    return ALL_EMOTIONS.map(key => ({
+      name: key.charAt(0) + key.slice(1).toLowerCase(),
+      value: counts[key],
+      color: EMOTION_COLORS[key]
+    })).filter(e => e.value > 0);
+  }
+
+  function getLatestSentiment(entries) {
+    if (!entries?.length) return "neutral";
+    const sorted = [...entries].sort((a, b) => new Date(b.date)-new Date(a.date));
+    const s = sorted[0].sentiments || "neutral";
+    return s.toLowerCase();
+  }
+
+  useEffect(() => {
+    setIsLoading(true);
+    setError("");
+    async function fetchProfile() {
+      try {
+        const token = localStorage.getItem("userToken");
+        const res = await axios.get("http://localhost:8080/users",{
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const user = res.data; 
+        setProfile({
+          username: user.userName || "",
+          email: user.email || "",
+          joinDate: user.id?.date ? user.id.date.slice(0,10) : "",
+          emotionalStatus: getLatestSentiment(user.journalEntryList),
+          totalEntries: user.journalEntryList?.length || 0,
+          streakDays: computeStreakDays(user.journalEntryList || []),
+        });
+        setJournalEntries(user.journalEntryList || []);
+        setEmotionalData(createEmotionalTrend(user.journalEntryList || []));
+        setPieData(createPieData(user.journalEntryList || []));
+      } catch (err) {
+        setError("Could not load profile. Check your server.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfile((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswords((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Check password validity before saving changes
+  const validatePasswords = () => {
+    if ((passwords.new && !passwords.confirm) || (!passwords.new && passwords.confirm)) {
+      setPasswordError("Both password fields are required to change password.");
+      return false;
+    }
+    if (passwords.new && passwords.new.length < 6) {
+      setPasswordError("New password must be at least 6 characters.");
+      return false;
+    }
+    if (passwords.new && passwords.new !== passwords.confirm) {
+      setPasswordError("New passwords do not match.");
+      return false;
+    }
+    setPasswordError("");
+    return true;
+  };
+
+  // Unified save for profile and password
+  const handleSave = async () => {
+    if (!validatePasswords()) return;
+    setIsLoading(true);
+    setError("");
+    try {
+      const token = localStorage.getItem("userToken");
+      const data = {};
+      if (profile.username) data.userName = profile.username;
+      if (passwords.new) data.password = passwords.new;
+
+      await axios.put(
+        "http://localhost:8080/users/update-user",
+        data, 
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      toast({
+        title: "Profile updated successfully!",
+        description: "Your changes have been saved.",
+      });
+      setPasswords({ new: "", confirm: "" });
+    } catch (err) {
+      if (err.response && err.response.data) {
+        setError(err.response.data);
+      } else {
+        setError("Failed to update profile. Please try again.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-12 font-semibold text-lg">Loading profile...</div>;
+  }
+
   return (
     <div className="min-h-screen bg-[var(--gradient-hero)]">
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
-          {/* Heading */}
           <div className="animate-fade-in">
             <h1 className="text-3xl font-bold text-[hsl(var(--foreground))] mb-2">
               Profile Dashboard
@@ -202,12 +265,8 @@ export default function Profile() {
               Manage your account and track your journaling progress
             </p>
           </div>
-
-          {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left Column: Profile info & password */}
             <div className="lg:col-span-2 flex flex-col gap-6 animate-fade-in">
-              {/* Profile Information Card */}
               <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -225,7 +284,6 @@ export default function Profile() {
                     </Alert>
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Username */}
                     <div className="space-y-2">
                       <Label htmlFor="username" className="text-[hsl(var(--foreground))]">
                         Username
@@ -242,7 +300,6 @@ export default function Profile() {
                         />
                       </div>
                     </div>
-                    {/* Email (readonly) */}
                     <div className="space-y-2">
                       <Label htmlFor="email" className="text-[hsl(var(--foreground))]">
                         Email
@@ -261,36 +318,9 @@ export default function Profile() {
                       </div>
                     </div>
                   </div>
-                  {/* Change Password Form */}
                   <div className="space-y-2">
                     <Label className="text-[hsl(var(--foreground))]">Change Password</Label>
-                    <form
-                      className="grid grid-cols-1 md:grid-cols-3 gap-3 items-start"
-                      onSubmit={handlePasswordSubmit}
-                      autoComplete="off"
-                    >
-                      {/* Current Password */}
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
-                        <Input
-                          id="current"
-                          name="current"
-                          type={showCurrentPassword ? "text" : "password"}
-                          placeholder="Current"
-                          value={passwords.current}
-                          onChange={handlePasswordChange}
-                          className="pl-10 pr-10 mb-0 bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))]"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword((v) => !v)}
-                          className="absolute right-3 top-3 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-                          aria-label={showCurrentPassword ? "Hide current password" : "Show current password"}
-                        >
-                          {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </button>
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                       {/* New Password */}
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
@@ -298,11 +328,10 @@ export default function Profile() {
                           id="new"
                           name="new"
                           type={showNewPassword ? "text" : "password"}
-                          placeholder="New"
+                          placeholder="New Password"
                           value={passwords.new}
                           onChange={handlePasswordChange}
                           className="pl-10 pr-10 mb-0 bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))]"
-                          required
                         />
                         <button
                           type="button"
@@ -320,11 +349,10 @@ export default function Profile() {
                           id="confirm"
                           name="confirm"
                           type={showConfirmPassword ? "text" : "password"}
-                          placeholder="Confirm"
+                          placeholder="Confirm New Password"
                           value={passwords.confirm}
                           onChange={handlePasswordChange}
                           className="pl-10 pr-10 mb-0 bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))]"
-                          required
                         />
                         <button
                           type="button"
@@ -335,30 +363,15 @@ export default function Profile() {
                           {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-
-                      {/* Submit Button & Password error */}
-                      <div className="md:col-span-3 flex flex-col sm:flex-row sm:items-center gap-2 mt-2">
-                        <Button
-                          type="submit"
-                          variant="outline"
-                          size="sm"
-                          disabled={passwordLoading}
-                          className="border-[hsl(var(--border))] bg-[hsl(var(--input))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))] order-1"
-                        >
-                          {passwordLoading ? "Updating..." : "Change Password"}
-                        </Button>
-                        {passwordError && (
-                          <div className="flex-1 order-2">
-                            <Alert variant="destructive">
-                              <AlertDescription>{passwordError}</AlertDescription>
-                            </Alert>
-                          </div>
-                        )}
-                      </div>
-                    </form>
+                    </div>
+                    {/* Password error */}
+                    {passwordError && (
+                      <Alert variant="destructive" className="mt-2">
+                        <AlertDescription>{passwordError}</AlertDescription>
+                      </Alert>
+                    )}
                   </div>
-
-                  {/* Save Profile Changes */}
+                  {/* Save Profile Changes (for both username and password) */}
                   <Button
                     onClick={handleSave}
                     variant="journal"
@@ -371,10 +384,7 @@ export default function Profile() {
                 </CardContent>
               </Card>
             </div>
-
-            {/* Right Column: Membership & Journal Stats */}
             <div className="flex flex-col gap-6 animate-fade-in">
-              {/* Membership info */}
               <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -395,8 +405,6 @@ export default function Profile() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Journal stats */}
               <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -417,8 +425,6 @@ export default function Profile() {
               </Card>
             </div>
           </div>
-
-          {/* Emotional Trends charts full width */}
           <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)] max-w-4xl mx-auto animate-fade-in mt-6">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -444,23 +450,42 @@ export default function Profile() {
                     <Line
                       type="monotone"
                       dataKey="happy"
-                      stroke="#31c48d"
+                      stroke={EMOTION_COLORS.HAPPY}
                       strokeWidth={2}
-                      dot={{ fill: "#31c48d", strokeWidth: 2, r: 4 }}
+                      dot={{ fill: EMOTION_COLORS.HAPPY, strokeWidth: 2, r: 4 }}
+                      name="Happy"
                     />
                     <Line
                       type="monotone"
                       dataKey="excited"
-                      stroke="#5eead4"
+                      stroke={EMOTION_COLORS.EXCITED}
                       strokeWidth={2}
-                      dot={{ fill: "#5eead4", strokeWidth: 2, r: 4 }}
+                      dot={{ fill: EMOTION_COLORS.EXCITED, strokeWidth: 2, r: 4 }}
+                      name="Excited"
                     />
                     <Line
                       type="monotone"
                       dataKey="neutral"
-                      stroke="#cbd5e1"
+                      stroke={EMOTION_COLORS.NEUTRAL}
                       strokeWidth={2}
-                      dot={{ fill: "#cbd5e1", strokeWidth: 2, r: 4 }}
+                      dot={{ fill: EMOTION_COLORS.NEUTRAL, strokeWidth: 2, r: 4 }}
+                      name="Neutral"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="anxious"
+                      stroke={EMOTION_COLORS.ANXIOUS}
+                      strokeWidth={2}
+                      dot={{ fill: EMOTION_COLORS.ANXIOUS, strokeWidth: 2, r: 4 }}
+                      name="Anxious"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="sad"
+                      stroke={EMOTION_COLORS.SAD}
+                      strokeWidth={2}
+                      dot={{ fill: EMOTION_COLORS.SAD, strokeWidth: 2, r: 4 }}
+                      name="Sad"
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -469,7 +494,7 @@ export default function Profile() {
                 <h4 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">Overall Distribution</h4>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={20} outerRadius={50} dataKey="value">
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={20} outerRadius={50} dataKey="value" label>
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
