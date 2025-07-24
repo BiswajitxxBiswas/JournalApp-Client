@@ -1,4 +1,5 @@
 import { useState } from "react";
+import axios from "axios";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -11,11 +12,11 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../hooks/use-toast";
 
 const moodOptions = [
-  { value: "happy", label: "Happy", emoji: "😊" },
-  { value: "excited", label: "Excited", emoji: "🤩" },
-  { value: "neutral", label: "Neutral", emoji: "😐" },
-  { value: "anxious", label: "Anxious", emoji: "😰" },
-  { value: "sad", label: "Sad", emoji: "😔" }
+  { value: "HAPPY", label: "Happy", emoji: "😊" },
+  { value: "EXCITED", label: "Excited", emoji: "🤩" },
+  { value: "NEUTRAL", label: "Neutral", emoji: "😐" },
+  { value: "ANXIOUS", label: "Anxious", emoji: "😰" },
+  { value: "SAD", label: "Sad", emoji: "😔" }
 ];
 
 export default function CreateEntry() {
@@ -41,14 +42,18 @@ export default function CreateEntry() {
   };
 
   const addTag = () => {
-    if (newTag.trim() && !entry.tags.includes(newTag.trim().toLowerCase())) {
-      setEntry(prev => ({ ...prev, tags: [...prev.tags, newTag.trim().toLowerCase()] }));
+    const tag = newTag.trim().toLowerCase();
+    if (tag && !entry.tags.includes(tag)) {
+      setEntry(prev => ({ ...prev, tags: [...prev.tags, tag] }));
       setNewTag("");
     }
   };
 
   const removeTag = (tagToRemove) => {
-    setEntry(prev => ({ ...prev, tags: prev.tags.filter(tag => tag !== tagToRemove) }));
+    setEntry(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
   };
 
   const handleKeyPress = (e) => {
@@ -63,30 +68,46 @@ export default function CreateEntry() {
       setError("Please fill in both title and content.");
       return;
     }
+    if (!entry.mood) {
+      setError("Please select your mood.");
+      return;
+    }
     setIsLoading(true);
     setError("");
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const payload = {
+        title: entry.title.trim(),
+        content: entry.content.trim(),
+        tags: entry.tags,
+        sentiments: entry.mood
+      };
+      const token = localStorage.getItem("userToken");
+      await axios.post("http://localhost:8080/journal", payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        }
+      });
       toast({
         title: "Entry saved successfully!",
-        description: "Your journal entry has been created.",
+        description: "Your journal entry has been created."
       });
       navigate("/dashboard");
-    } catch {
-      setError("Failed to save entry. Please try again.");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.response?.data ||
+        "Failed to save entry. Please try again.";
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const selectedMood = moodOptions.find(option => option.value === entry.mood);
-
   return (
     <div
       className="min-h-screen"
-      style={{
-        background: "linear-gradient(135deg, #e6f1f5 0%, #f6fbfc 100%)" // Match screenshot's very light blue/green
-      }}
+      style={{ background: "linear-gradient(135deg, #e6f1f5 0%, #f6fbfc 100%)" }}
     >
       <div className="container mx-auto px-4 py-10">
         <div className="max-w-6xl mx-auto">
@@ -98,7 +119,6 @@ export default function CreateEntry() {
               Capture your thoughts and emotions in this moment
             </p>
           </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Main Editor */}
             <div className="lg:col-span-2">
@@ -118,9 +138,10 @@ export default function CreateEntry() {
                       <AlertDescription>{error}</AlertDescription>
                     </Alert>
                   )}
-
                   <div className="space-y-2">
-                    <Label htmlFor="title" className="text-[hsl(var(--foreground))] font-medium">Title</Label>
+                    <Label htmlFor="title" className="text-[hsl(var(--foreground))] font-medium">
+                      Title
+                    </Label>
                     <Input
                       id="title"
                       name="title"
@@ -130,9 +151,10 @@ export default function CreateEntry() {
                       className="text-base bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))] rounded-lg"
                     />
                   </div>
-
                   <div className="space-y-2">
-                    <Label htmlFor="content" className="text-[hsl(var(--foreground))] font-medium">Content</Label>
+                    <Label htmlFor="content" className="text-[hsl(var(--foreground))] font-medium">
+                      Content
+                    </Label>
                     <Textarea
                       id="content"
                       name="content"
@@ -142,11 +164,15 @@ export default function CreateEntry() {
                       className="min-h-[260px] resize-none leading-relaxed bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))] rounded-lg"
                     />
                   </div>
-
                   <div className="flex flex-col sm:flex-row gap-3 pt-4">
                     <Button
                       onClick={handleSave}
-                      disabled={isLoading || !entry.title.trim() || !entry.content.trim()}
+                      disabled={
+                        isLoading ||
+                        !entry.title.trim() ||
+                        !entry.content.trim() ||
+                        !entry.mood
+                      }
                       className="flex-1 bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary-glow))] rounded-lg font-semibold"
                     >
                       <Save className="h-4 w-4 mr-1" />
@@ -209,7 +235,12 @@ export default function CreateEntry() {
                       placeholder="Add a tag..."
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
-                      onKeyPress={handleKeyPress}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addTag();
+                        }
+                      }}
                       className="flex-1 bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))] rounded-lg"
                     />
                     <Button
@@ -223,7 +254,6 @@ export default function CreateEntry() {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-
                   {entry.tags.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {entry.tags.map((tag) => (
@@ -244,9 +274,7 @@ export default function CreateEntry() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-[hsl(var(--muted-foreground))] italic">
-                      No tags added yet
-                    </p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))] italic">No tags added yet</p>
                   )}
                 </CardContent>
               </Card>
