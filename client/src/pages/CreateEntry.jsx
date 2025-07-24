@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
@@ -8,7 +8,7 @@ import { Textarea } from "../components/ui/textarea";
 import { Badge } from "../components/ui/badge";
 import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, Save, Plus, X, Heart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "../hooks/use-toast";
 
 const moodOptions = [
@@ -30,7 +30,24 @@ export default function CreateEntry() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  // Check if this is an edit operation
+  const editEntry = location.state?.editEntry;
+  const isEditing = !!editEntry;
+
+  // Pre-populate form if editing
+  useEffect(() => {
+    if (editEntry) {
+      setEntry({
+        title: editEntry.title || "",
+        content: editEntry.content || "",
+        mood: editEntry.sentiments || undefined,
+        tags: editEntry.tags || []
+      });
+    }
+  }, [editEntry]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -72,8 +89,10 @@ export default function CreateEntry() {
       setError("Please select your mood.");
       return;
     }
+
     setIsLoading(true);
     setError("");
+
     try {
       const payload = {
         title: entry.title.trim(),
@@ -82,22 +101,38 @@ export default function CreateEntry() {
         sentiments: entry.mood
       };
       const token = localStorage.getItem("userToken");
-      await axios.post("http://localhost:8080/journal", payload, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        }
-      });
-      toast({
-        title: "Entry saved successfully!",
-        description: "Your journal entry has been created."
-      });
+
+      if (isEditing) {
+        // Update existing entry
+        await axios.put(`http://localhost:8080/journal/${editEntry.id}`, payload, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        });
+        toast({
+          title: "Entry updated successfully!",
+          description: "Your journal entry has been updated."
+        });
+      } else {
+        // Create new entry
+        await axios.post("http://localhost:8080/journal", payload, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        });
+        toast({
+          title: "Entry saved successfully!",
+          description: "Your journal entry has been created."
+        });
+      }
       navigate("/dashboard");
     } catch (err) {
       const msg =
         err.response?.data?.message ||
         err.response?.data ||
-        "Failed to save entry. Please try again.";
+        `Failed to ${isEditing ? 'update' : 'save'} entry. Please try again.`;
       setError(msg);
     } finally {
       setIsLoading(false);
@@ -106,23 +141,26 @@ export default function CreateEntry() {
 
   return (
     <div
-      className="min-h-screen"
-      style={{ background: "linear-gradient(135deg, #e6f1f5 0%, #f6fbfc 100%)" }}
+      className="min-h-screen w-full"
+      style={{
+        background:
+          "linear-gradient(135deg, hsl(var(--background)), hsl(var(--journal-soft)) 60%, hsl(var(--journal-light)) 100%)",
+      }}
     >
       <div className="container mx-auto px-4 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="mb-10">
             <h1 className="text-3xl font-bold text-[hsl(var(--foreground))] mb-1 text-left">
-              Create New Entry
+              {isEditing ? "Edit Entry" : "Create New Entry"}
             </h1>
             <p className="text-[hsl(var(--muted-foreground))] text-left">
-              Capture your thoughts and emotions in this moment
+              {isEditing ? "Update your thoughts and emotions" : "Capture your thoughts and emotions in this moment"}
             </p>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             {/* Main Editor */}
             <div className="lg:col-span-2">
-              <Card className="bg-white border border-[hsl(var(--border))] shadow-md rounded-xl p-8">
+              <Card className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-[var(--shadow-card)] rounded-xl p-8">
                 <CardHeader className="p-0 mb-6">
                   <CardTitle className="flex items-center gap-2 text-[hsl(var(--foreground))] text-xl font-semibold mb-1">
                     <BookOpen className="h-5 w-5 text-[hsl(var(--primary))]" />
@@ -176,7 +214,7 @@ export default function CreateEntry() {
                       className="flex-1 bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary-glow))] rounded-lg font-semibold"
                     >
                       <Save className="h-4 w-4 mr-1" />
-                      {isLoading ? "Saving..." : "Save Entry"}
+                      {isLoading ? (isEditing ? "Updating..." : "Saving...") : (isEditing ? "Update Entry" : "Save Entry")}
                     </Button>
                     <Button
                       variant="outline"
@@ -193,7 +231,7 @@ export default function CreateEntry() {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Mood Selector */}
-              <Card className="bg-white border border-[hsl(var(--border))] shadow-md rounded-xl p-6">
+              <Card className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-[var(--shadow-card)] rounded-xl p-6">
                 <CardHeader className="p-0 mb-4">
                   <CardTitle className="flex items-center gap-2 text-lg text-[hsl(var(--foreground))] font-semibold">
                     <Heart className="h-5 w-5 text-[hsl(var(--primary))]" />
@@ -210,7 +248,7 @@ export default function CreateEntry() {
                         className={`w-full flex flex-col items-center justify-center rounded-lg border-2 py-3 transition-all duration-200 font-medium ${
                           entry.mood === option.value
                             ? "border-[hsl(var(--primary))] bg-[hsl(var(--primary-glow))] text-[hsl(var(--primary))]"
-                            : "border-[hsl(var(--border))] bg-white text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--muted))]"
+                            : "border-[hsl(var(--border))] bg-[hsl(var(--card))] text-[hsl(var(--foreground))] hover:border-[hsl(var(--primary))] hover:bg-[hsl(var(--muted))]"
                         }`}
                       >
                         <span className="text-xl mb-1">{option.emoji}</span>
@@ -222,7 +260,7 @@ export default function CreateEntry() {
               </Card>
 
               {/* Tags */}
-              <Card className="bg-white border border-[hsl(var(--border))] shadow-md rounded-xl p-6">
+              <Card className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-[var(--shadow-card)] rounded-xl p-6">
                 <CardHeader className="p-0 mb-4">
                   <CardTitle className="text-lg text-[hsl(var(--foreground))] font-semibold">Tags</CardTitle>
                   <CardDescription className="text-[hsl(var(--muted-foreground))]">
@@ -235,12 +273,7 @@ export default function CreateEntry() {
                       placeholder="Add a tag..."
                       value={newTag}
                       onChange={(e) => setNewTag(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addTag();
-                        }
-                      }}
+                      onKeyPress={handleKeyPress}
                       className="flex-1 bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))] rounded-lg"
                     />
                     <Button
@@ -249,7 +282,7 @@ export default function CreateEntry() {
                       size="icon"
                       onClick={addTag}
                       disabled={!newTag.trim()}
-                      className="border-[hsl(var(--border))] text-[hsl(var(--foreground))] bg-white hover:bg-[hsl(var(--muted))] rounded-lg"
+                      className="border-[hsl(var(--border))] text-[hsl(var(--foreground))] bg-[hsl(var(--card))] hover:bg-[hsl(var(--muted))] rounded-lg"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

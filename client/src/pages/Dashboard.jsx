@@ -251,7 +251,7 @@ export default function Dashboard() {
                     variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteEntry(selectedEntry.id)}
-                    className="flex-1 bg-[hsl(var(--destructive))] text-white hover:bg-[hsl(var(--destructive-foreground))]/80 border-none transition-colors font-semibold"
+                    className="flex-1 bg-[hsl(var(--destructive))] text-white hover:brightness-75 border-none transition-all font-semibold"
                   >
                     <Trash2 className="h-4 w-4 mr-2 text-white" />
                     Delete Entry
