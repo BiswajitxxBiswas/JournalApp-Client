@@ -30,15 +30,24 @@ import {
   Cell,
 } from "recharts";
 
+// Vibrant emotion colors for charts
 const EMOTION_COLORS = {
-  HAPPY: "#31c48d",
-  EXCITED: "#5eead4",
-  NEUTRAL: "#cbd5e1",
-  ANXIOUS: "#f87171",
-  SAD: "#fbbf24",
+  HAPPY: "hsl(158, 72%, 58%)",        // Vibrant green/teal
+  EXCITED: "hsl(47, 100%, 60%)",      // Lively yellow/gold
+  NEUTRAL: "hsl(211, 27%, 70%)",      // Soft blue-gray
+  ANXIOUS: "hsl(0, 82%, 66%)",        // Warm red/coral
+  SAD: "hsl(221, 83%, 63%)",          // Strong blue
 };
 
 const ALL_EMOTIONS = ["HAPPY", "EXCITED", "NEUTRAL", "ANXIOUS", "SAD"];
+
+const tagColors = [
+  "bg-[hsl(var(--accent))] text-[hsl(var(--primary))] border-[hsl(var(--primary))]",
+  "bg-[hsl(var(--journal-light))] text-[hsl(var(--primary))] border-[hsl(var(--primary))]",
+  "bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]",
+  "bg-[hsl(var(--secondary))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]",
+  "bg-[hsl(var(--journal-warm))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]",
+];
 
 export default function Profile() {
   const [profile, setProfile] = useState({
@@ -53,15 +62,10 @@ export default function Profile() {
   const [error, setError] = useState("");
   const { toast } = useToast();
 
-  // New Password state
-  const [passwords, setPasswords] = useState({
-    new: "",
-    confirm: "",
-  });
+  const [passwords, setPasswords] = useState({ new: "", confirm: "" });
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
-
   const [journalEntries, setJournalEntries] = useState([]);
   const [emotionalData, setEmotionalData] = useState([]);
   const [pieData, setPieData] = useState([]);
@@ -106,7 +110,7 @@ export default function Profile() {
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      days.push(d.toISOString().slice(0,10));
+      days.push(d.toISOString().slice(0, 10));
     }
     return days;
   }
@@ -124,9 +128,7 @@ export default function Profile() {
     entries.forEach(entry => {
       const idx = last7Days.indexOf(entry.date);
       let s = entry.sentiments ? entry.sentiments.toLowerCase() : "neutral";
-      if (idx >= 0 && chart[idx][s] !== undefined) {
-        chart[idx][s]++;
-      }
+      if (idx >= 0 && chart[idx][s] !== undefined) chart[idx][s]++;
     });
     return chart;
   }
@@ -146,7 +148,7 @@ export default function Profile() {
 
   function getLatestSentiment(entries) {
     if (!entries?.length) return "neutral";
-    const sorted = [...entries].sort((a, b) => new Date(b.date)-new Date(a.date));
+    const sorted = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
     const s = sorted[0].sentiments || "neutral";
     return s.toLowerCase();
   }
@@ -157,17 +159,17 @@ export default function Profile() {
     async function fetchProfile() {
       try {
         const token = localStorage.getItem("userToken");
-        const res = await axios.get("http://localhost:8080/users",{
+        const res = await axios.get("http://localhost:8080/users", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         });
-        const user = res.data; 
+        const user = res.data;
         setProfile({
           username: user.userName || "",
           email: user.email || "",
-          joinDate: user.id?.date ? user.id.date.slice(0,10) : "",
+          joinDate: user.id?.date ? user.id.date.slice(0, 10) : "",
           emotionalStatus: getLatestSentiment(user.journalEntryList),
           totalEntries: user.journalEntryList?.length || 0,
           streakDays: computeStreakDays(user.journalEntryList || []),
@@ -194,7 +196,6 @@ export default function Profile() {
     setPasswords((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Check password validity before saving changes
   const validatePasswords = () => {
     if ((passwords.new && !passwords.confirm) || (!passwords.new && passwords.confirm)) {
       setPasswordError("Both password fields are required to change password.");
@@ -212,7 +213,6 @@ export default function Profile() {
     return true;
   };
 
-  // Unified save for profile and password
   const handleSave = async () => {
     if (!validatePasswords()) return;
     setIsLoading(true);
@@ -225,7 +225,7 @@ export default function Profile() {
 
       await axios.put(
         "http://localhost:8080/users/update-user",
-        data, 
+        data,
         {
           headers: {
             "Content-Type": "application/json",
@@ -254,7 +254,13 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--gradient-hero)]">
+    <div
+      className="min-h-screen w-full"
+      style={{
+        background:
+          "linear-gradient(135deg, hsl(var(--background)), hsl(var(--journal-soft)) 60%, hsl(var(--journal-light)) 100%)",
+      }}
+    >
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="animate-fade-in">
@@ -267,7 +273,7 @@ export default function Profile() {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 flex flex-col gap-6 animate-fade-in">
-              <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
+              <Card className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-[hsl(var(--primary))]" />
@@ -321,7 +327,6 @@ export default function Profile() {
                   <div className="space-y-2">
                     <Label className="text-[hsl(var(--foreground))]">Change Password</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
-                      {/* New Password */}
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                         <Input
@@ -342,7 +347,6 @@ export default function Profile() {
                           {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
-                      {/* Confirm Password */}
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
                         <Input
@@ -364,14 +368,12 @@ export default function Profile() {
                         </button>
                       </div>
                     </div>
-                    {/* Password error */}
                     {passwordError && (
                       <Alert variant="destructive" className="mt-2">
                         <AlertDescription>{passwordError}</AlertDescription>
                       </Alert>
                     )}
                   </div>
-                  {/* Save Profile Changes (for both username and password) */}
                   <Button
                     onClick={handleSave}
                     variant="journal"
@@ -385,7 +387,7 @@ export default function Profile() {
               </Card>
             </div>
             <div className="flex flex-col gap-6 animate-fade-in">
-              <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
+              <Card className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <Calendar className="h-5 w-5 text-[hsl(var(--primary))]" />
@@ -405,7 +407,7 @@ export default function Profile() {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
+              <Card className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-[var(--shadow-card)]">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
                     <BookOpen className="h-5 w-5 text-[hsl(var(--primary))]" />
@@ -425,7 +427,7 @@ export default function Profile() {
               </Card>
             </div>
           </div>
-          <Card className="bg-[var(--gradient-card)] border border-[hsl(var(--border))] shadow-[var(--shadow-card)] max-w-4xl mx-auto animate-fade-in mt-6">
+          <Card className="bg-[hsl(var(--card))] border border-[hsl(var(--border))] shadow-[var(--shadow-card)] max-w-4xl mx-auto animate-fade-in mt-6">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <TrendingUp className="h-5 w-5 text-[hsl(var(--primary))]" />
@@ -451,63 +453,76 @@ export default function Profile() {
                       type="monotone"
                       dataKey="happy"
                       stroke={EMOTION_COLORS.HAPPY}
-                      strokeWidth={2}
-                      dot={{ fill: EMOTION_COLORS.HAPPY, strokeWidth: 2, r: 4 }}
+                      strokeWidth={3}
+                      dot={{ fill: EMOTION_COLORS.HAPPY, r: 5 }}
                       name="Happy"
                     />
                     <Line
                       type="monotone"
                       dataKey="excited"
                       stroke={EMOTION_COLORS.EXCITED}
-                      strokeWidth={2}
-                      dot={{ fill: EMOTION_COLORS.EXCITED, strokeWidth: 2, r: 4 }}
+                      strokeWidth={3}
+                      dot={{ fill: EMOTION_COLORS.EXCITED, r: 5 }}
                       name="Excited"
                     />
                     <Line
                       type="monotone"
                       dataKey="neutral"
                       stroke={EMOTION_COLORS.NEUTRAL}
-                      strokeWidth={2}
-                      dot={{ fill: EMOTION_COLORS.NEUTRAL, strokeWidth: 2, r: 4 }}
+                      strokeWidth={3}
+                      dot={{ fill: EMOTION_COLORS.NEUTRAL, r: 5 }}
                       name="Neutral"
                     />
                     <Line
                       type="monotone"
                       dataKey="anxious"
                       stroke={EMOTION_COLORS.ANXIOUS}
-                      strokeWidth={2}
-                      dot={{ fill: EMOTION_COLORS.ANXIOUS, strokeWidth: 2, r: 4 }}
+                      strokeWidth={3}
+                      dot={{ fill: EMOTION_COLORS.ANXIOUS, r: 5 }}
                       name="Anxious"
                     />
                     <Line
                       type="monotone"
                       dataKey="sad"
                       stroke={EMOTION_COLORS.SAD}
-                      strokeWidth={2}
-                      dot={{ fill: EMOTION_COLORS.SAD, strokeWidth: 2, r: 4 }}
+                      strokeWidth={3}
+                      dot={{ fill: EMOTION_COLORS.SAD, r: 5 }}
                       name="Sad"
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-              <div className="h-32 mt-6">
+              <div className="h-40 mt-6 flex flex-col items-center justify-center">
                 <h4 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">Overall Distribution</h4>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={20} outerRadius={50} dataKey="value" label>
-                      {pieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="w-full flex justify-center">
+                  <ResponsiveContainer width={220} height={120}>
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={25}
+                        outerRadius={55}
+                        dataKey="value"
+                        label
+                        paddingAngle={2}
+                        stroke="hsl(var(--card))"
+                        strokeWidth={2}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={EMOTION_COLORS[entry.name.toUpperCase()]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </CardContent>
           </Card>

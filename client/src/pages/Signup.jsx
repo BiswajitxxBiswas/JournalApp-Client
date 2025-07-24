@@ -59,8 +59,6 @@ export default function Signup({ onLogin }) {
 
       const { token, user } = response.data;
 
-      // console.log(response);
-
       // Store auth info
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("userToken", token);
@@ -95,8 +93,14 @@ export default function Signup({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--gradient-hero)] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[var(--gradient-card)] shadow-[var(--shadow-journal)] border border-[hsl(var(--border))] animate-fade-in">
+    <div 
+      className="min-h-screen w-full flex items-center justify-center p-4"
+      style={{
+        background:
+          "linear-gradient(135deg, hsl(var(--background)), hsl(var(--journal-soft)) 60%, hsl(var(--journal-light)) 100%)",
+      }}
+    >
+      <Card className="w-full max-w-md bg-[hsl(var(--card))] shadow-[var(--shadow-card)] border border-[hsl(var(--border))] animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
             <BookOpen className="h-8 w-8 text-[hsl(var(--primary))]" />
@@ -118,11 +122,8 @@ export default function Signup({ onLogin }) {
             )}
 
             <div className="space-y-2">
-              <Label
-                htmlFor="userName"
-                className="text-[hsl(var(--foreground))]"
-              >
-                UserName
+              <Label htmlFor="userName" className="text-[hsl(var(--foreground))]">
+                Username
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
@@ -159,10 +160,7 @@ export default function Signup({ onLogin }) {
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="text-[hsl(var(--foreground))]"
-              >
+              <Label htmlFor="password" className="text-[hsl(var(--foreground))]">
                 Password
               </Label>
               <div className="relative">
@@ -193,10 +191,7 @@ export default function Signup({ onLogin }) {
             </div>
 
             <div className="space-y-2">
-              <Label
-                htmlFor="confirmPassword"
-                className="text-[hsl(var(--foreground))]"
-              >
+              <Label htmlFor="confirmPassword" className="text-[hsl(var(--foreground))]">
                 Confirm Password
               </Label>
               <div className="relative">
@@ -234,7 +229,7 @@ export default function Signup({ onLogin }) {
               type="submit"
               variant="journal"
               size="lg"
-              className="w-full bg-[hsl(var(--journal-primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-glow))] transition-colors"
+              className="w-full bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary-glow))] transition-colors"
               disabled={isLoading}
             >
               {isLoading ? "Creating Account..." : "Create Account"}
@@ -246,7 +241,7 @@ export default function Signup({ onLogin }) {
               Already have an account?{" "}
               <Link
                 to="/login"
-                className="text-[hsl(var(--primary))] hover:underline font-medium transition-colors"
+                className="text-[hsl(var(--primary))] hover:text-[hsl(var(--primary-glow))] hover:underline font-medium transition-colors"
               >
                 Sign in here
               </Link>

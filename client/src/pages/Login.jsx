@@ -71,8 +71,14 @@ export default function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--gradient-hero)] flex items-center justify-center p-4">
-      <Card className="w-full max-w-md bg-[var(--gradient-card)] shadow-[var(--shadow-journal)] border border-[hsl(var(--border))] animate-fade-in">
+    <div 
+      className="min-h-screen w-full flex items-center justify-center p-4"
+      style={{
+        background:
+          "linear-gradient(135deg, hsl(var(--background)), hsl(var(--journal-soft)) 60%, hsl(var(--journal-light)) 100%)",
+      }}
+    >
+      <Card className="w-full max-w-md bg-[hsl(var(--card))] shadow-[var(--shadow-card)] border border-[hsl(var(--border))] animate-fade-in">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center mb-4">
             <BookOpen className="h-8 w-8 text-[hsl(var(--primary))]" />
@@ -103,7 +109,7 @@ export default function Login({ onLogin }) {
                   id="userName"
                   name="userName"
                   type="text"
-                  placeholder="Enter your userName"
+                  placeholder="Enter your username"
                   value={formData.userName}
                   onChange={handleInputChange}
                   className="pl-10 bg-[hsl(var(--input))] border border-[hsl(var(--border))] text-[hsl(var(--foreground))] placeholder:text-[hsl(var(--muted-foreground))] focus:ring-2 focus:ring-[hsl(var(--ring))]"
@@ -147,7 +153,7 @@ export default function Login({ onLogin }) {
               type="submit"
               variant="journal"
               size="lg"
-              className="w-full bg-[hsl(var(--journal-primary))] text-[hsl(var(--primary-foreground))] hover:bg-[hsl(var(--primary-glow))] transition-colors"
+              className="w-full bg-[hsl(var(--primary))] text-white hover:bg-[hsl(var(--primary-glow))] transition-colors"
               disabled={isLoading}
             >
               {isLoading ? "Signing In..." : "Sign In"}
@@ -159,7 +165,7 @@ export default function Login({ onLogin }) {
               Don't have an account?{" "}
               <Link
                 to="/signup"
-                className="text-[hsl(var(--primary))] hover:underline font-medium transition-colors"
+                className="text-[hsl(var(--primary))] hover:text-[hsl(var(--primary-glow))] hover:underline font-medium transition-colors"
               >
                 Sign up here
               </Link>
