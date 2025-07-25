@@ -1,7 +1,13 @@
 import axios from "axios";
 import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Alert, AlertDescription } from "../components/ui/alert";
@@ -17,7 +23,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import api from "../utils/auth"
+import api from "../utils/auth";
 import {
   LineChart,
   Line,
@@ -33,14 +39,15 @@ import {
 
 // Vibrant emotion colors for charts
 const EMOTION_COLORS = {
-  HAPPY: "hsl(158, 72%, 58%)",        // Vibrant green/teal
-  EXCITED: "hsl(47, 100%, 60%)",      // Lively yellow/gold
-  NEUTRAL: "hsl(211, 27%, 70%)",      // Soft blue-gray
-  ANXIOUS: "hsl(0, 82%, 66%)",        // Warm red/coral
-  SAD: "hsl(221, 83%, 63%)",          // Strong blue
+  HAPPY: "hsl(158, 72%, 58%)", // Vibrant green/teal
+  EXCITED: "hsl(47, 100%, 60%)", // Lively yellow/gold
+  NEUTRAL: "hsl(211, 27%, 70%)", // Soft blue-gray
+  ANXIOUS: "hsl(0, 82%, 66%)", // Warm red/coral
+  SAD: "hsl(221, 83%, 63%)", // Strong blue
+  ANGRY: "hsl(0, 75%, 48%)", // Rich, slightly dark red
 };
 
-const ALL_EMOTIONS = ["HAPPY", "EXCITED", "NEUTRAL", "ANXIOUS", "SAD"];
+const ALL_EMOTIONS = ["HAPPY", "EXCITED", "NEUTRAL", "ANXIOUS", "SAD", "ANGRY"];
 
 const tagColors = [
   "bg-[hsl(var(--accent))] text-[hsl(var(--primary))] border-[hsl(var(--primary))]",
@@ -90,7 +97,9 @@ export default function Profile() {
 
   function computeStreakDays(entries) {
     if (!entries || entries.length === 0) return 0;
-    const uniqueDates = [...new Set(entries.map(e => e.date))].sort((a, b) => new Date(b) - new Date(a));
+    const uniqueDates = [...new Set(entries.map((e) => e.date))].sort(
+      (a, b) => new Date(b) - new Date(a)
+    );
     let streak = 1;
     for (let i = 1; i < uniqueDates.length; ++i) {
       const prev = new Date(uniqueDates[i - 1]);
@@ -117,15 +126,16 @@ export default function Profile() {
 
   function createEmotionalTrend(entries) {
     const last7Days = getLast7Days();
-    const chart = last7Days.map(d => ({
+    const chart = last7Days.map((d) => ({
       date: d.slice(5),
       happy: 0,
       sad: 0,
       neutral: 0,
       excited: 0,
-      anxious: 0
+      anxious: 0,
+      angry: 0,
     }));
-    entries.forEach(entry => {
+    entries.forEach((entry) => {
       const idx = last7Days.indexOf(entry.date);
       let s = entry.sentiments ? entry.sentiments.toLowerCase() : "neutral";
       if (idx >= 0 && chart[idx][s] !== undefined) chart[idx][s]++;
@@ -134,21 +144,30 @@ export default function Profile() {
   }
 
   function createPieData(entries) {
-    const counts = { HAPPY: 0, EXCITED: 0, NEUTRAL: 0, ANXIOUS: 0, SAD: 0 };
-    entries.forEach(e => {
+    const counts = {
+      HAPPY: 0,
+      EXCITED: 0,
+      NEUTRAL: 0,
+      ANXIOUS: 0,
+      SAD: 0,
+      Angry: 0,
+    };
+    entries.forEach((e) => {
       const key = (e.sentiments || "NEUTRAL").toUpperCase();
       if (counts.hasOwnProperty(key)) counts[key]++;
     });
-    return ALL_EMOTIONS.map(key => ({
+    return ALL_EMOTIONS.map((key) => ({
       name: key.charAt(0) + key.slice(1).toLowerCase(),
       value: counts[key],
-      color: EMOTION_COLORS[key]
-    })).filter(e => e.value > 0);
+      color: EMOTION_COLORS[key],
+    })).filter((e) => e.value > 0);
   }
 
   function getLatestSentiment(entries) {
     if (!entries?.length) return "neutral";
-    const sorted = [...entries].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sorted = [...entries].sort(
+      (a, b) => new Date(b.date) - new Date(a.date)
+    );
     const s = sorted[0].sentiments || "neutral";
     return s.toLowerCase();
   }
@@ -192,7 +211,10 @@ export default function Profile() {
   };
 
   const validatePasswords = () => {
-    if ((passwords.new && !passwords.confirm) || (!passwords.new && passwords.confirm)) {
+    if (
+      (passwords.new && !passwords.confirm) ||
+      (!passwords.new && passwords.confirm)
+    ) {
       setPasswordError("Both password fields are required to change password.");
       return false;
     }
@@ -218,7 +240,7 @@ export default function Profile() {
       if (profile.username) data.userName = profile.username;
       if (passwords.new) data.password = passwords.new;
 
-      await api.put("/users/update-user",data);
+      await api.put("/users/update-user", data);
       toast.success("Profile updated successfully!");
       setPasswords({ new: "", confirm: "" });
     } catch (err) {
@@ -233,7 +255,11 @@ export default function Profile() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-12 font-semibold text-lg">Loading profile...</div>;
+    return (
+      <div className="text-center py-12 font-semibold text-lg">
+        Loading profile...
+      </div>
+    );
   }
 
   return (
@@ -274,7 +300,10 @@ export default function Profile() {
                   )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username" className="text-[hsl(var(--foreground))]">
+                      <Label
+                        htmlFor="username"
+                        className="text-[hsl(var(--foreground))]"
+                      >
                         Username
                       </Label>
                       <div className="relative">
@@ -290,7 +319,10 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-[hsl(var(--foreground))]">
+                      <Label
+                        htmlFor="email"
+                        className="text-[hsl(var(--foreground))]"
+                      >
                         Email
                       </Label>
                       <div className="relative">
@@ -308,7 +340,9 @@ export default function Profile() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[hsl(var(--foreground))]">Change Password</Label>
+                    <Label className="text-[hsl(var(--foreground))]">
+                      Change Password
+                    </Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
                       <div className="relative">
                         <Lock className="absolute left-3 top-3 h-4 w-4 text-[hsl(var(--muted-foreground))]" />
@@ -325,9 +359,17 @@ export default function Profile() {
                           type="button"
                           onClick={() => setShowNewPassword((v) => !v)}
                           className="absolute right-3 top-3 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-                          aria-label={showNewPassword ? "Hide new password" : "Show new password"}
+                          aria-label={
+                            showNewPassword
+                              ? "Hide new password"
+                              : "Show new password"
+                          }
                         >
-                          {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showNewPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                       <div className="relative">
@@ -345,9 +387,17 @@ export default function Profile() {
                           type="button"
                           onClick={() => setShowConfirmPassword((v) => !v)}
                           className="absolute right-3 top-3 text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors"
-                          aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                          aria-label={
+                            showConfirmPassword
+                              ? "Hide confirm password"
+                              : "Show confirm password"
+                          }
                         >
-                          {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -379,11 +429,17 @@ export default function Profile() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-sm text-[hsl(var(--muted-foreground))]">Member since</p>
-                    <p className="font-medium text-[hsl(var(--foreground))]">{formatJoinDate(profile.joinDate)}</p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                      Member since
+                    </p>
+                    <p className="font-medium text-[hsl(var(--foreground))]">
+                      {formatJoinDate(profile.joinDate)}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-[hsl(var(--muted-foreground))]">Member for</p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                      Member for
+                    </p>
                     <p className="font-medium text-[hsl(var(--foreground))]">
                       {calculateDaysSince(profile.joinDate)} days
                     </p>
@@ -399,12 +455,20 @@ export default function Profile() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div>
-                    <p className="text-sm text-[hsl(var(--muted-foreground))]">Total entries</p>
-                    <p className="text-2xl font-bold text-[hsl(var(--primary))]">{profile.totalEntries}</p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                      Total entries
+                    </p>
+                    <p className="text-2xl font-bold text-[hsl(var(--primary))]">
+                      {profile.totalEntries}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-[hsl(var(--muted-foreground))]">Writing streak</p>
-                    <p className="text-2xl font-bold text-[hsl(var(--journal-warm))]">{profile.streakDays} days</p>
+                    <p className="text-sm text-[hsl(var(--muted-foreground))]">
+                      Writing streak
+                    </p>
+                    <p className="text-2xl font-bold text-[hsl(var(--journal-warm))]">
+                      {profile.streakDays} days
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -416,15 +480,27 @@ export default function Profile() {
                 <TrendingUp className="h-5 w-5 text-[hsl(var(--primary))]" />
                 Emotional Trends
               </CardTitle>
-              <CardDescription>Your emotional patterns over the last 7 days</CardDescription>
+              <CardDescription>
+                Your emotional patterns over the last 7 days
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-64 mb-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={emotionalData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="hsl(var(--border))"
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
+                    <YAxis
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "hsl(var(--card))",
@@ -472,11 +548,21 @@ export default function Profile() {
                       dot={{ fill: EMOTION_COLORS.SAD, r: 5 }}
                       name="Sad"
                     />
+                    <Line
+                      type="monotone"
+                      dataKey="angry"
+                      stroke={EMOTION_COLORS.ANGRY}
+                      strokeWidth={3}
+                      dot={{ fill: EMOTION_COLORS.ANGRY, r: 5 }}
+                      name="Angry"
+                    />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
               <div className="h-40 mt-6 flex flex-col items-center justify-center">
-                <h4 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">Overall Distribution</h4>
+                <h4 className="text-sm font-medium text-[hsl(var(--foreground))] mb-3">
+                  Overall Distribution
+                </h4>
                 <div className="w-full flex justify-center">
                   <ResponsiveContainer width={220} height={120}>
                     <PieChart>
@@ -493,7 +579,10 @@ export default function Profile() {
                         strokeWidth={2}
                       >
                         {pieData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={EMOTION_COLORS[entry.name.toUpperCase()]} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={EMOTION_COLORS[entry.name.toUpperCase()]}
+                          />
                         ))}
                       </Pie>
                       <Tooltip

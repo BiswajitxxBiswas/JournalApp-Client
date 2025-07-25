@@ -16,16 +16,17 @@ const moodEmojis = {
   sad: "😔",
   neutral: "😐",
   excited: "🤩",
-  anxious: "😰"
+  anxious: "😰",
+  angry: "😡"
 };
 
-// Metallic/Material green colors from your design system tokens!
 const moodColors = {
   happy:   "bg-[hsl(var(--journal-soft))] text-[hsl(var(--primary))] border-[hsl(var(--primary))]",
   excited: "bg-[hsl(var(--accent))] text-[hsl(var(--primary))] border-[hsl(var(--primary))]",
   neutral: "bg-[hsl(var(--muted))] text-[hsl(var(--foreground))] border-[hsl(var(--border))]",
   anxious: "bg-[hsl(var(--destructive))]/10 text-[hsl(var(--foreground))] border-[hsl(var(--destructive))]",
   sad:     "bg-[hsl(var(--secondary))] text-[hsl(var(--muted-foreground))] border-[hsl(var(--border))]",
+  angry: "bg-[hsl(0,78%,94%)] text-[hsl(0,70%,38%)] border-[hsl(0,75%,48%)]",
 };
 
 // Green-accented but lively tag palette

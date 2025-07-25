@@ -29,7 +29,6 @@ api.interceptors.response.use(
 
       toast.error('Session expired. Please log in again.');
 
-      // ⏳ Delay redirect so toast can show
       setTimeout(() => {
         window.location.href = '/login';
       },2000);

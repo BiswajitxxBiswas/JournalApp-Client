@@ -17,7 +17,8 @@ const moodOptions = [
   { value: "EXCITED", label: "Excited", emoji: "🤩" },
   { value: "NEUTRAL", label: "Neutral", emoji: "😐" },
   { value: "ANXIOUS", label: "Anxious", emoji: "😰" },
-  { value: "SAD", label: "Sad", emoji: "😔" }
+  { value: "SAD", label: "Sad", emoji: "😔" },
+  { value: "ANGRY", label: "Angry", emoji: "😡" }
 ];
 
 export default function CreateEntry() {
