@@ -109,7 +109,7 @@ export default function CreateEntry() {
         toast.success("Entry saved successfully! ");
       } else {
         // Create new entry
-        await api.post("http://localhost:8080/journal", payload);
+        await api.post("/journal", payload);
         toast.success("Entry updated successfully! ");
       }
       navigate("/dashboard");
