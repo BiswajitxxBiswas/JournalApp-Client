@@ -25,9 +25,7 @@ const ProtectedRoute = ({ isAuthenticated, isAuthChecked, children }) => {
 };
 
 const PublicRoute = ({ isAuthenticated, isAuthChecked, children }) => {
-  if (!isAuthChecked) return null; // or loading spinner
-  // Show public page for unauthenticated users.
-  // Authenticated users see the page without forced redirect.
+  if (!isAuthChecked) return null; 
   return children;
 };
 
@@ -121,7 +119,7 @@ const App = () => {
   const handleLogin = () => {
     localStorage.setItem("isAuthenticated", "true");
     setIsAuthenticated(true);
-    toast.success("Login successful!");
+    // toast.success("Login successful!");
   };
 
   const handleLogout = () => {
