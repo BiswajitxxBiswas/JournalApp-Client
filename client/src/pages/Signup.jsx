@@ -1,20 +1,20 @@
-import axios from "axios";
 import { useState } from "react";
-import { Button } from "../components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Input } from "../components/ui/input";
-import { Label } from "../components/ui/label";
-import { Alert, AlertDescription } from "../components/ui/alert";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { BookOpen, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import api from "../utils/auth"
+import api from "../utils/auth";
+import VerifyEmailOTP from "./VerifyEmailOTP";
 
 export default function Signup({ onLogin }) {
   const [formData, setFormData] = useState({
@@ -27,6 +27,7 @@ export default function Signup({ onLogin }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
 
   const navigate = useNavigate();
 
@@ -45,31 +46,19 @@ export default function Signup({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (!validateForm()) return;
-
     setIsLoading(true);
 
     try {
-      const response = await api.post("/public/signup", {
+      // Replace with your API signup call
+      await api.post("/public/signup", {
         userName: formData.userName,
         email: formData.email,
         password: formData.password,
       });
 
-      const { token, user } = response.data;
-
-      // Store auth info
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userToken", token);
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // Notify App of login (update authenticated state)
-      if (onLogin) onLogin();
-
-      toast.success("Welcome to JournalApp. Let's set up your profile.");
-
-      navigate("/profile");
+      toast.success("Account created! Please verify your email to finish registration.");
+      setShowOTPVerification(true); // show verify OTP screen
     } catch (err) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);
@@ -89,8 +78,30 @@ export default function Signup({ onLogin }) {
     }));
   };
 
+  // Called after OTP is verified
+  const handleVerifySuccess = () => {
+    if (onLogin) onLogin();
+    navigate("/dashboard");
+  };
+
+  const handleBackToLogin = () => {
+    navigate("/login");
+  };
+
+  if (showOTPVerification) {
+    return (
+      <VerifyEmailOTP
+        email={formData.email}
+        onVerifySuccess={handleVerifySuccess}
+        onBackToLogin={handleBackToLogin}
+        title="Verify Your Email"
+        description="We've sent a verification code to your email address"
+      />
+    );
+  }
+
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex items-center justify-center p-4"
       style={{
         background:
@@ -109,7 +120,6 @@ export default function Signup({ onLogin }) {
             Start your journaling journey today
           </CardDescription>
         </CardHeader>
-
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -117,7 +127,6 @@ export default function Signup({ onLogin }) {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-
             <div className="space-y-2">
               <Label htmlFor="userName" className="text-[hsl(var(--foreground))]">
                 Username
@@ -136,7 +145,6 @@ export default function Signup({ onLogin }) {
                 />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="email" className="text-[hsl(var(--foreground))]">
                 Email
@@ -155,7 +163,6 @@ export default function Signup({ onLogin }) {
                 />
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="password" className="text-[hsl(var(--foreground))]">
                 Password
@@ -186,7 +193,6 @@ export default function Signup({ onLogin }) {
                 </button>
               </div>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="confirmPassword" className="text-[hsl(var(--foreground))]">
                 Confirm Password
@@ -221,7 +227,6 @@ export default function Signup({ onLogin }) {
                 </button>
               </div>
             </div>
-
             <Button
               type="submit"
               variant="journal"
@@ -232,7 +237,6 @@ export default function Signup({ onLogin }) {
               {isLoading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
-
           <div className="mt-6 text-center">
             <p className="text-sm text-[hsl(var(--muted-foreground))]">
               Already have an account?{" "}

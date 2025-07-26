@@ -14,7 +14,8 @@ import { Alert, AlertDescription } from "../components/ui/alert";
 import { BookOpen, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
-import api from "../utils/auth"
+import api from "../utils/auth";
+import VerifyEmailOTP from "./VerifyEmailOTP"; // Adjust path if needed
 
 export default function Login({ onLogin }) {
   const [formData, setFormData] = useState({
@@ -24,6 +25,8 @@ export default function Login({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showVerifyOtp, setShowVerifyOtp] = useState(false);
+  const [emailForVerification, setEmailForVerification] = useState("");
 
   const navigate = useNavigate();
 
@@ -45,13 +48,23 @@ export default function Login({ onLogin }) {
         password: formData.password,
       });
 
-      const token = response.data.token;
+      const { token, user } = response.data;
 
-      // Save auth info in localStorage
+      if (!user.mailVerify) {
+        await api.post("/public/resend-otp", null, {
+          params: { email: user.email },
+        });
+
+        setEmailForVerification(user.email);
+        setShowVerifyOtp(true);
+        toast.info("Email not verified. A verification code has been sent.");
+        return;
+      }
+
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("userToken", token);
+      localStorage.setItem("user", JSON.stringify(user));
 
-      // Notify App to update auth state
       if (onLogin) onLogin();
 
       toast.success("Welcome back!");
@@ -60,15 +73,28 @@ export default function Login({ onLogin }) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else {
-        setError("Invalid userName or password. Please try again.");
+        setError("Invalid username or password. Please try again.");
       }
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (showVerifyOtp) {
+    return (
+      <VerifyEmailOTP
+        email={emailForVerification}
+        onVerifySuccess={() => {
+          setShowVerifyOtp(false);
+          toast.success("Email verified! Please log in.");
+        }}
+        onBackToLogin={() => setShowVerifyOtp(false)}
+      />
+    );
+  }
+
   return (
-    <div 
+    <div
       className="min-h-screen w-full flex items-center justify-center p-4"
       style={{
         background:

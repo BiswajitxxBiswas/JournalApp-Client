@@ -31,7 +31,7 @@ api.interceptors.response.use(
 
       setTimeout(() => {
         window.location.href = '/login';
-      },2000);
+      },20000);
     }
     return Promise.reject(error);
   }
