@@ -16,23 +16,22 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import CreateEntry from "./pages/CreateEntry";
 import NotFound from "./pages/NotFound";
+import api from "./utils/auth";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ isAuthenticated, isAuthChecked, children }) => {
-  if (!isAuthChecked) return null; // or loading spinner
+  if (!isAuthChecked) return null;
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 const PublicRoute = ({ isAuthenticated, isAuthChecked, children }) => {
-  if (!isAuthChecked) return null; 
+  if (!isAuthChecked) return null;
   return children;
 };
 
 const AppContent = ({ isAuthenticated, isAuthChecked, onLogin, onLogout }) => {
   const location = useLocation();
-  console.log("Auth:", isAuthenticated, "Checked:", isAuthChecked, "Path:", location.pathname);
-
   const isNotFoundPage = location.pathname === "/404";
 
   return (
@@ -103,30 +102,40 @@ const App = () => {
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
   useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem("userToken");
-      const authStatus = localStorage.getItem("isAuthenticated");
-      setIsAuthenticated(!!token && authStatus === "true");
-      setIsAuthChecked(true);
+    const checkAuth = async () => {
+      try {
+        const response = await api.get("/users/me");
+        setIsAuthenticated(true);
+        localStorage.setItem("isAuthenticated", "true");
+        localStorage.setItem("user", JSON.stringify(response.data));
+      } catch (err) {
+        setIsAuthenticated(false);
+        localStorage.removeItem("isAuthenticated");
+        localStorage.removeItem("user");
+      } finally {
+        setIsAuthChecked(true);
+      }
     };
     checkAuth();
 
-    // Optional: Listen to storage changes for sync between tabs
-    window.addEventListener("storage", checkAuth);
-    return () => window.removeEventListener("storage", checkAuth);
+    const syncAuth = () => {
+      if (localStorage.getItem("isAuthenticated") !== "true") {
+        setIsAuthenticated(false);
+      }
+    };
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
   }, []);
 
   const handleLogin = () => {
-    localStorage.setItem("isAuthenticated", "true");
     setIsAuthenticated(true);
-    // toast.success("Login successful!");
+    localStorage.setItem("isAuthenticated", "true");
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("userToken");
+    setIsAuthenticated(false);
     localStorage.removeItem("isAuthenticated");
     localStorage.removeItem("user");
-    setIsAuthenticated(false);
     toast.info("You have been logged out.");
   };
 

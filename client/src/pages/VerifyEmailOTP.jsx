@@ -59,8 +59,7 @@ const VerifyEmailOTP = ({
           },
         }
       );
-      const { token, user } = res.data;
-      localStorage.setItem("userToken", token);
+      const { user } = res.data;
       localStorage.setItem("isAuthenticated", "true");
       localStorage.setItem("user", JSON.stringify(user));
 

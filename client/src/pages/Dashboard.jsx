@@ -47,7 +47,6 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchEntries = async () => {
       try {
-        const token = localStorage.getItem("userToken");
         const res = await api.get("/journal");
         const normalizedEntries = res.data.map((entry) => ({
           ...entry,
@@ -79,7 +78,6 @@ export default function Dashboard() {
 
   const handleDeleteEntry = async (entryId) => {
     try {
-      const token = localStorage.getItem("userToken");
       await api.delete(`/journal/${entryId}`);
       setEntries(entries.filter(entry => entry.id !== entryId));
       setSelectedEntry(null);

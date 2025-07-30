@@ -177,7 +177,6 @@ export default function Profile() {
     setError("");
     async function fetchProfile() {
       try {
-        const token = localStorage.getItem("userToken");
         const res = await api.get("/users");
         const user = res.data;
         setProfile({
@@ -235,7 +234,6 @@ export default function Profile() {
     setIsLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("userToken");
       const data = {};
       if (profile.username) data.userName = profile.username;
       if (passwords.new) data.password = passwords.new;

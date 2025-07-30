@@ -102,7 +102,6 @@ export default function CreateEntry() {
         tags: entry.tags,
         sentiments: entry.mood
       };
-      const token = localStorage.getItem("userToken");
 
       if (isEditing) {
         // Update existing entry

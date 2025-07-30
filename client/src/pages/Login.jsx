@@ -48,7 +48,7 @@ export default function Login({ onLogin }) {
         password: formData.password,
       });
 
-      const { token, user } = response.data;
+      const { user } = response.data;
 
       if (!user.mailVerify) {
         await api.post("/public/resend-otp", null, {
@@ -62,7 +62,6 @@ export default function Login({ onLogin }) {
       }
 
       localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("userToken", token);
       localStorage.setItem("user", JSON.stringify(user));
 
       if (onLogin) onLogin();
