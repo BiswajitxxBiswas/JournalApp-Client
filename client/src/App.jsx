@@ -5,6 +5,7 @@ import { TooltipProvider } from "./components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { JournalNavbar } from "./components/JournalNavbar";
+import LandingOrRedirect  from "./wrapper/LandingOrRedirect"
 
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -41,11 +42,7 @@ const AppContent = ({ isAuthenticated, isAuthChecked, onLogin, onLogout }) => {
         {/* Public Routes */}
         <Route
           path="/"
-          element={
-            <PublicRoute isAuthenticated={isAuthenticated} isAuthChecked={isAuthChecked}>
-              <Landing />
-            </PublicRoute>
-          }
+          element={<LandingOrRedirect isAuthenticated={isAuthenticated} isAuthChecked={isAuthChecked} />}
         />
         <Route
           path="/login"
