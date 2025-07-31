@@ -1,10 +1,11 @@
+// wrapper/LandingOrRedirect.js
+import { useAuth } from "../AuthContext";
 import { Navigate } from "react-router-dom";
-import Landing from "../pages/Landing"; 
+import Landing from "../pages/Landing";
 
-const LandingOrRedirect = ({ isAuthenticated, isAuthChecked }) => {
-  if (!isAuthChecked) return null;
+export default function LandingOrRedirect() {
+  const { isAuthenticated, isAuthChecked } = useAuth();
+  if (!isAuthChecked) return null; // or a loading spinner
   if (isAuthenticated) return <Navigate to="/dashboard" replace />;
   return <Landing />;
-};
-
-export default LandingOrRedirect;
+}

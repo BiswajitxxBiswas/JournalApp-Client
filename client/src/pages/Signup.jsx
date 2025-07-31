@@ -15,8 +15,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../utils/auth";
 import VerifyEmailOTP from "./VerifyEmailOTP";
+import { useAuth } from "../AuthContext";
 
-export default function Signup({ onLogin }) {
+export default function Signup() {
   const [formData, setFormData] = useState({
     userName: "",
     email: "",
@@ -30,6 +31,7 @@ export default function Signup({ onLogin }) {
   const [showOTPVerification, setShowOTPVerification] = useState(false);
 
   const navigate = useNavigate();
+  const { handleLogin } = useAuth();
 
   const validateForm = () => {
     if (formData.password !== formData.confirmPassword) {
@@ -50,17 +52,14 @@ export default function Signup({ onLogin }) {
     setIsLoading(true);
 
     try {
-      // Replace with your API signup call
       await api.post("/public/signup", {
         userName: formData.userName,
         email: formData.email,
         password: formData.password,
       });
 
-      toast.success(
-        "Account created! Please verify your email to finish registration."
-      );
-      setShowOTPVerification(true); // show verify OTP screen
+      toast.success("Account created! Please verify your email to finish registration.");
+      setShowOTPVerification(true);
     } catch (err) {
       if (err.response?.data?.message) {
         setError(err.response.data.message);
@@ -80,9 +79,9 @@ export default function Signup({ onLogin }) {
     }));
   };
 
-  // Called after OTP is verified
-  const handleVerifySuccess = () => {
-    if (onLogin) onLogin();
+  // After OTP verification, hydrate global auth state and navigate
+  const handleVerifySuccess = async () => {
+    await handleLogin();
     navigate("/dashboard");
   };
 
@@ -91,8 +90,8 @@ export default function Signup({ onLogin }) {
   };
 
   const handleGoogleLogin = () => {
-    const clientId = import.meta.env.GOOGLE_CLIENT_ID;
-    const redirectUri = import.meta.env.GOOGLE_CALLBACK_LINK;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const redirectUri = import.meta.env.VITE_GOOGLE_CALLBACK_LINK;
     const googleAuthUrl =
       "https://accounts.google.com/o/oauth2/v2/auth" +
       `?client_id=${encodeURIComponent(clientId)}` +
@@ -143,10 +142,7 @@ export default function Signup({ onLogin }) {
               </Alert>
             )}
             <div className="space-y-2">
-              <Label
-                htmlFor="userName"
-                className="text-[hsl(var(--foreground))]"
-              >
+              <Label htmlFor="userName" className="text-[hsl(var(--foreground))]">
                 Username
               </Label>
               <div className="relative">
@@ -182,10 +178,7 @@ export default function Signup({ onLogin }) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="password"
-                className="text-[hsl(var(--foreground))]"
-              >
+              <Label htmlFor="password" className="text-[hsl(var(--foreground))]">
                 Password
               </Label>
               <div className="relative">
@@ -215,10 +208,7 @@ export default function Signup({ onLogin }) {
               </div>
             </div>
             <div className="space-y-2">
-              <Label
-                htmlFor="confirmPassword"
-                className="text-[hsl(var(--foreground))]"
-              >
+              <Label htmlFor="confirmPassword" className="text-[hsl(var(--foreground))]">
                 Confirm Password
               </Label>
               <div className="relative">

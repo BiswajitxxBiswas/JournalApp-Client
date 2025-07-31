@@ -16,21 +16,20 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { useAuth } from "../AuthContext";
 
 const VerifyEmailOTP = ({
   email = "",
   onVerifySuccess,
-  onLogin,
   onBackToLogin,
   title = "Verify Your Email",
   description = "We've sent a verification code to your email address",
 }) => {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const navigate = useNavigate();
+  const { handleLogin } = useAuth();
 
-  // Mask email logic
   const maskEmail = (inputEmail) => {
     if (!inputEmail || !inputEmail.includes("@")) return "";
     const [localPart, domain] = inputEmail.split("@");
@@ -49,7 +48,7 @@ const VerifyEmailOTP = ({
     }
     setIsLoading(true);
     try {
-      const res = await api.post(
+      await api.post(
         "/public/verify-otp",
         {},
         {
@@ -59,17 +58,14 @@ const VerifyEmailOTP = ({
           },
         }
       );
-      const { user } = res.data;
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("user", JSON.stringify(user));
-
-      if (onLogin) onLogin();
-      if (onVerifySuccess) onVerifySuccess();
-
+      // After successful verify, hydrate auth and redirect
+      await handleLogin();
       toast.success("Your email has been successfully verified");
+      if (onVerifySuccess) onVerifySuccess();
       navigate("/dashboard");
     } catch (error) {
       const msg =
+        error?.response?.data?.message ||
         error?.response?.data ||
         "Invalid verification code. Please try again.";
       toast.error(msg);
@@ -86,6 +82,7 @@ const VerifyEmailOTP = ({
       toast.info("A new verification code has been sent to your email");
     } catch (error) {
       const msg =
+        error?.response?.data?.message ||
         error?.response?.data ||
         "Failed to resend OTP. Please try again.";
       toast.error(msg);

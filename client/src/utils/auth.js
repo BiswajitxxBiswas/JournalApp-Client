@@ -6,30 +6,27 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,
+  withCredentials: true, // cookies are automatically sent
 });
 
-// === Token Refresh Logic ===
 let isRefreshing = false;
 let refreshPromise = null;
 
 api.interceptors.response.use(
   response => response,
   async (error) => {
-    // Short-circuit if config unavailable (e.g., network error)
     if (!error.config) return Promise.reject(error);
 
     const originalRequest = error.config;
     const status = error.response?.status;
 
-    // Define public auth endpoints to avoid recursive refresh/logout/login
     const isPublicAuthRoute = [
       '/public/login',
       '/public/refresh',
       '/public/logout',
     ].some(path => originalRequest.url.endsWith(path));
 
-    // Prevent inifinite retry loop on failed refresh
+    // Prevent infinite retry loop on failed refresh
     if (originalRequest._retryEnd) {
       return Promise.reject(error);
     }
@@ -62,9 +59,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         // Mark to prevent recursive loops
         originalRequest._retryEnd = true;
-        // CLEAR all local auth state
-        localStorage.removeItem('isAuthenticated');
-        localStorage.removeItem('user');
+        // Do not use localStorage! Just handle logout logic here
         toast.error('Session expired. Please log in again.');
 
         // Redirect after slight delay to allow toast to show

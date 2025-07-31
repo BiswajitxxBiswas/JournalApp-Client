@@ -15,8 +15,9 @@ import { useNavigate, Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../utils/auth";
 import VerifyEmailOTP from "./VerifyEmailOTP";
+import { useAuth } from "../AuthContext";
 
-export default function Login({ onLogin }) {
+export default function Login() {
   const [formData, setFormData] = useState({
     userName: "",
     password: "",
@@ -28,6 +29,7 @@ export default function Login({ onLogin }) {
   const [emailForVerification, setEmailForVerification] = useState("");
 
   const navigate = useNavigate();
+  const { handleLogin } = useAuth();
 
   const handleInputChange = (e) => {
     setFormData((prev) => ({
@@ -49,6 +51,7 @@ export default function Login({ onLogin }) {
 
       const { user } = response.data;
 
+      // If email not verified, require OTP check
       if (!user.mailVerify) {
         await api.post("/public/resend-otp", null, {
           params: { email: user.email },
@@ -57,14 +60,12 @@ export default function Login({ onLogin }) {
         setEmailForVerification(user.email);
         setShowVerifyOtp(true);
         toast.info("Email not verified. A verification code has been sent.");
+        setIsLoading(false);
         return;
       }
 
-      // Store for UI only; real auth check uses cookie + /users/me
-      localStorage.setItem("isAuthenticated", "true");
-      localStorage.setItem("user", JSON.stringify(user));
-
-      if (onLogin) onLogin();
+      // Hydrate auth state after login by calling handleLogin from context
+      await handleLogin();
 
       toast.success("Welcome back!");
       navigate("/dashboard");
@@ -81,8 +82,8 @@ export default function Login({ onLogin }) {
 
   // Google Login Handler
   const handleGoogleLogin = () => {
-    const clientId = import.meta.env.GOOGLE_CLIENT_ID;
-    const redirectUri = import.meta.env.GOOGLE_CALLBACK_LINK;
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    const redirectUri = import.meta.env.VITE_GOOGLE_CALLBACK_LINK;
 
     const googleAuthUrl =
       "https://accounts.google.com/o/oauth2/v2/auth" +
@@ -95,13 +96,17 @@ export default function Login({ onLogin }) {
     window.location.href = googleAuthUrl;
   };
 
+  // Render OTP verification UI if user needs to verify email
   if (showVerifyOtp) {
     return (
       <VerifyEmailOTP
         email={emailForVerification}
-        onVerifySuccess={() => {
+        onVerifySuccess={async () => {
           setShowVerifyOtp(false);
           toast.success("Email verified! Please log in.");
+          // Optionally, auto-log the user in after verification:
+          await handleLogin();
+          navigate("/dashboard");
         }}
         onBackToLogin={() => setShowVerifyOtp(false)}
       />
