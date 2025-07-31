@@ -94,7 +94,7 @@ export default function CreateEntry() {
 
     setIsLoading(true);
     setError("");
-
+    
     try {
       const payload = {
         title: entry.title.trim(),
