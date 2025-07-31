@@ -5,13 +5,13 @@ import api from "./utils/auth";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null); // User object from /users/me
+  const [user, setUser] = useState(null);
   const [isAuthChecked, setIsAuthChecked] = useState(false);
 
-  // Hydrate authentication state from backend on mount and on focus
   const hydrate = async () => {
     try {
-      const res = await api.get("/users/me");
+      // Add a custom config flag to this specific request
+      const res = await api.get("/users/me", { _isHydration: true });
       setUser(res.data);
     } catch {
       setUser(null);
