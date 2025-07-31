@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { BookOpen, User, LogOut, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 export function JournalNavbar({ isAuthenticated, onLogout }) {
   const navigate = useNavigate();
@@ -65,25 +64,16 @@ export function JournalNavbar({ isAuthenticated, onLogout }) {
         <div className="flex items-center gap-2 flex-wrap">
           {isAuthenticated ? (
             <>
+              {/* New Entry FIRST */}
+              <NavItem path="/create" icon={Plus}>
+                New Entry
+              </NavItem>
               <NavItem path="/dashboard" icon={BookOpen}>
                 Dashboard
               </NavItem>
               <NavItem path="/profile" icon={User}>
                 Profile
               </NavItem>
-              <button
-                type="button"
-                onClick={() => navigate("/create")}
-                className={`
-                  group flex items-center gap-2 px-4 py-2 rounded-full font-medium transition-all duration-200
-                  hover:bg-[hsl(var(--accent))] hover:text-[hsl(var(--primary))]
-                  text-[hsl(var(--foreground))] bg-transparent cursor-pointer
-                `}
-                style={{ minHeight: "40px" }}
-              >
-                <Plus className="h-5 w-5 text-[hsl(var(--muted-foreground))] group-hover:text-[hsl(var(--primary))] transition-colors duration-200" />
-                New Entry
-              </button>
               <button
                 type="button"
                 onClick={handleLogoutClick}
